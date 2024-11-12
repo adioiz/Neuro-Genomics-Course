@@ -130,4 +130,4 @@ plot(log_mean_expression_for_treated, log_variance_expression_for_treated,
 
 # Add the fitted curve to the plot
 points(log_mean_expression_for_treated, curve__points_treated, col = "red", lwd = 2, pch=16)
-
+print("asadi")

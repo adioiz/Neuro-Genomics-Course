@@ -107,16 +107,27 @@ curved_fit_for_treated <- nls(log_variance_expression_for_treated ~ log_mean_exp
                   start = list(a = 0))
 # Extract the fitted coefficient 'a'
 a <- coef(curved_fit)
-a <- coef(curved_fit)
+a_treated <- coef(curved_fit_for_treated)
 # Generate points for the fitted curve
-curve <- log_mean_expression + a * (log_mean_expression^2)
-
-# Plot the log-transformed mean vs log-transformed variance
+curve_points <- log_mean_expression + a * (log_mean_expression^2)
+curve__points_treated <- log_mean_expression_for_treated + a_treated * (log_mean_expression_for_treated^2)
+# Plot the log-transformed mean vs log-transformed variance untreated
 plot(log_mean_expression, log_variance_expression, 
      xlab = "Log Mean Expression", 
      ylab = "Log Variance Expression", 
-     main = "Variance vs Mean with Fitted Negative Binomial Curve",
+     main = "Variance vs Mean with Fitted Negative Binomial Curve - untreated",
      pch = 16, col = "blue")
 
 # Add the fitted curve to the plot
-lines(log_mean_expression, curve, col = "red", lwd = 2)
+points(log_mean_expression, curve_points, col = "red", lwd = 2, pch=16)
+
+# Plot the log-transformed mean vs log-transformed variance treated
+plot(log_mean_expression_for_treated, log_variance_expression_for_treated, 
+     xlab = "Log Mean Expression", 
+     ylab = "Log Variance Expression", 
+     main = "Variance vs Mean with Fitted Negative Binomial Curve - treated",
+     pch = 16, col = "blue")
+
+# Add the fitted curve to the plot
+points(log_mean_expression_for_treated, curve__points_treated, col = "red", lwd = 2, pch=16)
+

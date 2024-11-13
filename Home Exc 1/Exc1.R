@@ -73,8 +73,8 @@ if (all(normalized_sums == normalized_sums[1])) {
 
 ## Does the data fit a Poisson distribution?
 # Select columns for untreated & treated conditions
-cts_untreated <- cts[, grep("untreated", colnames(cts))]
-cts_treated <- cts[, grep("treated", colnames(cts))]
+cts_untreated <- cts_normalized[, grep("untreated", colnames(cts_normalized))]
+cts_treated <- cts_normalized[, grep("treated", colnames(cts_normalized))]
 
 # Calculate the mean expression for each gene across samples
 mean_expression <- rowMeans(cts_untreated)
@@ -130,4 +130,91 @@ plot(log_mean_expression_for_treated, log_variance_expression_for_treated,
 
 # Add the fitted curve to the plot
 points(log_mean_expression_for_treated, curve__points_treated, col = "red", lwd = 2, pch=16)
-print("asadi")
+
+
+
+
+
+## Part 4:
+
+plot.new()
+log_of_genes_expression_levels_in_the_first_treated_sample <- log(Normalized_cts[,1]+1)
+log_of_genes_expression_levels_in_the_first_untreated_sample <- log(Normalized_cts[,4]+1)
+plot(log_of_genes_expression_levels_in_the_first_untreated_sample,main="Genes expression levels - treated v.s. untreated, in log scale", col = 'red')
+points(log_of_genes_expression_levels_in_the_first_treated_sample, col= 'blue')
+# a great way to separate some of the genes here is by using the following line that is set at e^10, for visualization:
+visualization_assisting_line <- vector("numeric", length = 15000)
+visualization_assisting_line <- visualization_assisting_line+11 # the height can change, if it is needed after normalizing cts.
+points(visualization_assisting_line, col ='green')
+# finding the name and the index of the rows in cts where the expression levels of the genes are on different sides of that line:
+for(index in 1:the_dimensions_of_cts_matrix[1]) #accessing the amount of rows in cts.
+{if (Normalized_cts[index,1]>exp(11.1) & Normalized_cts[index,4] < exp(10.9)) # checking by values that are close to 10.
+{
+  print(index)
+  print(rownames(cts)[index])
+}
+}
+
+# plotting the expression levels of the last gene that was detected in the loop.
+
+plot.new()
+expression_levels_of_the_detected_gene <- vector("numeric", length = the_dimensions_of_cts_matrix[2])
+
+for(j in 1:the_dimensions_of_cts_matrix[2]) #accessing the amount of columns in cts.
+{expression_levels_of_the_detected_gene[j]<-Normalized_cts[index,j]}
+plot(expression_levels_of_the_detected_gene)
+
+
+
+
+## install the package 'DESeq2' 
+# copy and paste the lines below into R 
+if (!requireNamespace("BiocManager", quietly = TRUE))
+{install.packages("BiocManager") 
+  BiocManager::install("DESeq2")} 
+## use the installed library 
+# copy and paste the line below into R
+library("DESeq2") 
+## use DESeq to detect the probability that each one of the genes is differentially expressed between the two conditions 
+# copy and paste the following lines into R
+dds <- DESeqDataSetFromMatrix(countData = cts, colData = coldata, design = ~ condition) 
+dds <- DESeq(dds) 
+res <- results(dds) 
+res
+
+
+## not sure about the following lines yet !
+
+#verifying that pvalues are on the 5th column: 
+colnames(res)[5]
+#creating_a_temp_version:
+ordered_res = res
+#ordering by the pvalues in increasing order
+indices_for_ordering_res<-order(res[,5], decreasing = FALSE)
+ordered_res<-res[indices_for_ordering_res,]
+#Examining the ordered_res matrix helps understanding that the last relevant row is 12358.
+rownames(ordered_res)[12349:12358]
+#presenting ‘log2FoldChange’ values:
+ordered_res[12349:12358,2]
+#presenting ‘padj’ values:
+ordered_res[12349:12358,6]
+
+# Part 5:
+
+# Importing the matrix:
+
+Matrix_of_part_5 <- read.csv("/Users/Yuval/Downloads/CircadianRNAseq.csv")
+Matrix_of_part_5 <- as.matrix(Matrix_of_part_5)
+
+x_axis_values <-c(2:13)
+# After examining the matrix, per1a is discovered at row 1248.
+
+# Next is plotting the data for that gene over the hours:
+plot(Matrix_of_part_5[1248,], xaxt='n')
+axis(1,at=x_axis_values,labels=c('11 [pM]','3 [AM]','7 [AM]','11 [AM]','3 [PM]','7 [PM]','11 [PM]','3 [AM]','7 [AM]','11 [AM]','3 [PM]','7 [PM]'))
+
+# Converting to the frequency domain:
+
+numeric_version_for_the_matrix <- as.numeric(Matrix_of_part_5)
+
+fft(numeric_version_for_the_matrix)

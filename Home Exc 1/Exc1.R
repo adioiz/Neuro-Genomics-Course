@@ -3,9 +3,9 @@
 ##################
 
 if (!require("BiocManager", quietly = TRUE))
-  install.packages("BiocManager")
-
-BiocManager::install("pasilla")
+  {install.packages("BiocManager")
+    BiocManager::install("pasilla")
+    }
 library("pasilla")
 
 ## Load the actual data from the pasilla package
@@ -49,7 +49,7 @@ scaling_factors <- target_sum / sample_sums
 
 # Create a normalized version of the cts matrix
 cts_normalized <- cts
-
+cts <- cts_normalized
 # Apply scaling factors to each column except the first one
 cts_normalized[, -1] <- sweep(cts[, -1], 2, scaling_factors[-1], "*")
 
@@ -130,4 +130,13 @@ plot(log_mean_expression_for_treated, log_variance_expression_for_treated,
 
 # Add the fitted curve to the plot
 points(log_mean_expression_for_treated, curve__points_treated, col = "red", lwd = 2, pch=16)
-print("asadi")
+
+##################
+##### Part 4 #####
+##################
+
+## Detect at least one gene that has different expression levels in the first sample
+
+
+
+

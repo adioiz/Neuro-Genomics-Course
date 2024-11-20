@@ -3,9 +3,9 @@
 ##################
 
 if (!require("BiocManager", quietly = TRUE))
-  {install.packages("BiocManager")
-    BiocManager::install("pasilla")
-    }
+{install.packages("BiocManager")
+  BiocManager::install("pasilla")
+}
 library("pasilla")
 
 ## Load the actual data from the pasilla package
@@ -102,9 +102,9 @@ abline(0, 1, col = "red", lty = 2)  # y = x line (slope = 1, intercept = 0)
 
 # Fit the nonlinear model variance = mean + a * mean^2:
 curved_fit <- nls(log_variance_expression ~ log_mean_expression + a * (log_mean_expression^2), 
-           start = list(a = 0))
-curved_fit_for_treated <- nls(log_variance_expression_for_treated ~ log_mean_expression_for_treated + a * (log_mean_expression_for_treated^2), 
                   start = list(a = 0))
+curved_fit_for_treated <- nls(log_variance_expression_for_treated ~ log_mean_expression_for_treated + a * (log_mean_expression_for_treated^2), 
+                              start = list(a = 0))
 # Extract the fitted coefficient 'a'
 a <- coef(curved_fit)
 a_treated <- coef(curved_fit_for_treated)
@@ -347,6 +347,7 @@ for (bin in 1:num_bins) {
   
   # Skip bins with no genes
   if (length(genes_in_bin) == 0) next
+  
   
   variances_in_bin <- variance_data[genes_in_bin]
   mean_variance_bin <- mean(variances_in_bin)

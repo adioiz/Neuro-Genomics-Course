@@ -156,12 +156,16 @@ threshold_untreated = exp(10.9)
 threshold_treated = exp(11.1)
 selected_indices <- which(cts_normalized[, "treated1"] > threshold_treated & 
                             cts_normalized[, "untreated1"] < threshold_untreated)
+selected_indices_reverse_way <- which(cts_normalized[, "treated1"] < threshold_treated & 
+                            cts_normalized[, "untreated1"] > threshold_untreated)
+selected_indices <- c(selected_indices, selected_indices_reverse_way)
 selected_genes_names <- rownames(cts)[selected_indices]
 selected_genes_indices <- unname(selected_indices)
 print(paste("Indices of the selected genes:", paste(selected_indices, collapse = ", ")))
 print(paste("The selected genes:", paste(selected_genes_names, collapse = ", ")))
 
-expression_levels_of_the_detected_gene <- cts_normalized[selected_genes_indices, ]
+selected_gene <- selected_genes_indices[1]
+expression_levels_of_the_detected_gene <- cts_normalized[selected_gene, ]
 
 plot(expression_levels_of_the_detected_gene,
      main = "Expression Levels of the detected Gene", 
@@ -183,9 +187,9 @@ dds <- DESeq(dds)
 res <- results(dds) 
 res
 ## Sort the genes according to the p-value, such that lower p-values will appear first
-res_df <- as.data.frame(res)
-res_df <- res_df[!is.na(res_df$pvalue), ] # remove NA values
-ordered_res <- res_df[order(res_df$pvalue, decreasing = FALSE), ]
+
+res_without_na <- res[!is.na(res$pvalue), ] # remove NA values
+ordered_res <- res_without_na[order(res_without_na$pvalue, decreasing = FALSE), ]
 p_values <- ordered_res$pvalue
 # Top 10 differ genes
 ten_most_divide_genes <- head(ordered_res, 10)
@@ -207,7 +211,7 @@ if (is_in_top_10) {
 ##################
 ##### Part 5 #####
 ##################
-# Load the  Circadian RNA-seq data into a matrix -> data :
+# Load the Circadian RNA-seq data into a matrix -> data :
 file = "/Users/adioiz/Documents/Learnings/Neuro-Genomics Course/Home Exc 1/CircadianRNAseq.csv"
 data <- as.matrix(read.csv(file, header = TRUE))
 
@@ -252,7 +256,7 @@ text(x = 1/24 + 0.0008, y = 0.05, labels = "Circadian Frequency", pos = 1, col =
 
 ## Process all the genes in the dataset and sort them according to the normalized FFT power in the circadian frequency of 1/24
 
-circadian_frequency <- 1/24
+circadian_index <- 2 # fs/N = 1/48 so the circadian frequency is in the second sample (1/24)
 circadian_powers <- numeric(nrow(data))
 
 for (i in 1:nrow(data)) {
@@ -273,7 +277,6 @@ for (i in 1:nrow(data)) {
   frequencies <- seq(1 / (N * sampling_interval), 
                      1 / (2 * sampling_interval), 
                      length.out = length(circadian_power_normalized))
-  circadian_index <- which.min(abs(frequencies - circadian_frequency))
   
   circadian_powers[i] <- circadian_power_normalized[circadian_index]
 }
@@ -282,7 +285,7 @@ for (i in 1:nrow(data)) {
 sorted_indices <- order(circadian_powers, decreasing = TRUE, na.last = TRUE)
 
 top_10_circadian_genes <- data[sorted_indices[1:10], "GeneSymbol"]
-
+top_40_circadian_genes <- data[sorted_indices[1:40], "GeneSymbol"]
 # Print the top 10 genes
 print("Top 10 genes with the highest normalized FFT power at 1/24:")
 print(top_10_circadian_genes)
@@ -348,7 +351,7 @@ for (bin in 1:num_bins) {
   # Skip bins with no genes
   if (length(genes_in_bin) == 0) next
   
-  variances_in_bin <- variance_data[genes_in_bin]
+  variances_in_bin <- sorted_variance_data[genes_in_bin]
   mean_variance_bin <- mean(variances_in_bin)
   sd_variance_bin <- sd(variances_in_bin) # standard deviation of the variances
   
@@ -358,6 +361,11 @@ for (bin in 1:num_bins) {
 # Sort z-scores in descending order
 sorted_indices <- order(z_scores, decreasing = TRUE, na.last = TRUE)
 z_scores <- z_scores[sorted_indices]
+
+top_40_z_scores <-z_scores[1:40]
+data_sorted_by_z_scores_top_40 <- data[sorted_indices[1:40], "GeneSymbol"]
+
+common_genes <- intersect(top_40_circadian_genes, data_sorted_by_z_scores_top_40)
 
 
 

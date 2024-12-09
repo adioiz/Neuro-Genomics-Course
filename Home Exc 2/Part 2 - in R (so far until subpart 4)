@@ -1,0 +1,222 @@
+code in R for part 2: 
+
+(file path should be adjusted by the user)
+
+
+# Exercise 2 - neurogenomics:
+
+#################
+#### PART 2 #####
+#################
+
+# Importing the code section from exercise 1:
+
+# Load the  Circadian RNA-seq data into a matrix -> data :
+Matrix_of_part_5 <- read.csv("/Users/Yuval/Downloads/CircadianRNAseq.csv")
+data <- as.matrix(Matrix_of_part_5)
+
+per1a_data <- data[data[, "GeneSymbol"] == "per1a", ]
+# Extract the time-course data (columns 2 to 13)
+expression_levels_of_per1a_gene <- as.numeric(per1a_data[2:13])
+
+# Plot the expression levels of gene per1a
+plot(expression_levels_of_per1a_gene, type = "o", 
+     xlab = "Time Points", 
+     ylab = "Expression Level", 
+     main = "Expression of 'per1a' in time points", 
+     xaxt = "n", 
+     col = "blue", pch = 16, lwd = 2)
+
+# Customize x-axis with time point:
+axis(1, at = 1:length(colnames(data)[2:13]), labels = colnames(data)[2:13], las = 2)
+
+# Compute the FFT:
+per1a_fft<- fft(expression_levels_of_per1a_gene)
+N = length(expression_levels_of_per1a_gene) # number of samples
+# Compute the power spectrum (magnitude squared of FFT)
+per1a_fft_power <- Mod(per1a_fft)^2
+unique_per1a_powers <- per1a_fft_power[2:7] # Remove the zero-frequency and take only the first six
+# Normalize the power spectrum:
+per1a_power_normalized <- unique_per1a_powers / sum(unique_per1a_powers)
+
+# Generate frequency labels (1/hour for a 24-hour cycle)
+sampling_interval <- 4  # 4-hour sampling interval
+frequencies <- seq(1 / (N * sampling_interval), 
+                   1 / (2 * sampling_interval), 
+                   length.out = length(per1a_power_normalized))
+
+# Plot the normalized FFT power
+plot(frequencies, per1a_power_normalized, 
+     xlab = "Frequency [1/hour]", 
+     ylab = "Normalized FFT Power", 
+     main = "Normalized FFT Power Spectrum")
+abline(v = 1/24, col = "green", lwd = 2, lty = 2)
+# Add text below the x-line
+text(x = 1/24 + 0.0008, y = 0.05, labels = "Circadian Frequency", pos = 1, col = "green")
+
+## Process all the genes in the dataset and sort them according to the normalized FFT power in the circadian frequency of 1/24
+
+circadian_frequency <- 1/24
+circadian_powers <- numeric(nrow(data))
+
+for (i in 1:nrow(data)) {
+  expression_levels <- as.numeric(data[i, 2:13])
+  
+  # Skip genes with all zero expression levels
+  if (all(expression_levels == 0)) {
+    circadian_powers[i] <- NA
+    next
+  }
+  
+  # Perform FFT and Compute the power spectrum:
+  circadian_fft <- fft(expression_levels)
+  circadian_power <- Mod(circadian_fft)^2
+  unique_circadian_powers <- circadian_power[2:7]
+  circadian_power_normalized <- unique_circadian_powers / sum(unique_circadian_powers)
+  
+  frequencies <- seq(1 / (N * sampling_interval), 
+                     1 / (2 * sampling_interval), 
+                     length.out = length(circadian_power_normalized))
+  circadian_index <- which.min(abs(frequencies - circadian_frequency))
+  
+  circadian_powers[i] <- circadian_power_normalized[circadian_index]       # For this part - circadian powers are the G factors.
+}
+
+# Sort the circadian powers and get the indices of the top 10
+sorted_indices <- order(circadian_powers, decreasing = TRUE, na.last = TRUE)
+# temp <- sorted_indices[1:40]
+# top_10_circadian_genes <- data[sorted_indices[1:10], "GeneSymbol"]
+
+# # Print the top 10 genes
+#print("Top 10 genes with the highest normalized FFT power at 1/24:")
+#print(top_10_circadian_genes)
+
+## sanity check
+for (i in sorted_indices[1:10]){
+  expression_levels <- as.numeric(data[i, 2:13])
+  # Perform FFT and Compute the power spectrum:
+  fft <- fft(expression_levels)
+  circadian_power <- Mod(fft)^2
+  unique_powers <- circadian_power[2:7]
+  power_normalized <- unique_powers / sum(unique_powers)
+  
+  frequencies <- seq(1 / (N * sampling_interval), 
+                     1 / (2 * sampling_interval), 
+                     length.out = length(power_normalized))
+  plot(frequencies, power_normalized, 
+       xlab = "Frequency [1/hour]", 
+       ylab = "Normalized FFT Power", 
+       main = "Normalized FFT Power Spectrum")
+  abline(v = 1/24, col = "green", lwd = 2, lty = 2)
+}
+
+# Sorting the G factor array.
+
+circadian_powers <- circadian_powers[sorted_indices]
+
+# Counting G factors for specific cut offs using the indices of the sorted array:
+vector_for_G_factor_cutt_offs_amount <-numeric(101)
+for (i in 1:101){
+  #count=0
+  j=1;
+  if( circadian_powers[j]>((i-1)/100) || circadian_powers[j]==((i-1)/100)){
+    while(!is.na(circadian_powers[j])&& (circadian_powers[j]>((i-1)/100) || circadian_powers[j]==((i-1)/100))){
+     #count=count+1
+     vector_for_G_factor_cutt_offs_amount[i]<-j
+     j=j+1
+   }
+  }
+}
+
+temp_for_back_up_keeping<-vector_for_G_factor_cutt_offs_amount
+
+# Shuffelling the columns so we could have the same samples for each gene, but without the biological temporal data:
+
+#already accounting for the following request for a 100 of these (with a for loop that slowly performs the averaging):
+
+averaged_vector_result<-numeric(101)
+
+for(averaging_index in 1:100){
+  
+  shuffled_data <- Matrix_of_part_5[, sample(ncol(Matrix_of_part_5))]
+
+
+  # Calculating G factors and cut of vectoe for the Shuffelled data:
+
+  data <- as.matrix(shuffled_data)
+
+  per1a_data <- data[data[, "GeneSymbol"] == "per1a", ]
+  # Extract the time-course data (columns 2 to 13)
+  expression_levels_of_per1a_gene <- as.numeric(per1a_data[2:13])
+
+
+  # Customize x-axis with time point:
+  axis(1, at = 1:length(colnames(data)[2:13]), labels = colnames(data)[2:13], las = 2)
+
+  # Compute the FFT:
+  per1a_fft<- fft(expression_levels_of_per1a_gene)
+  N = length(expression_levels_of_per1a_gene) # number of samples
+  # Compute the power spectrum (magnitude squared of FFT)
+  per1a_fft_power <- Mod(per1a_fft)^2
+  unique_per1a_powers <- per1a_fft_power[2:7] # Remove the zero-frequency and take only the first six
+  # Normalize the power spectrum:
+  per1a_power_normalized <- unique_per1a_powers / sum(unique_per1a_powers)
+
+  # Generate frequency labels (1/hour for a 24-hour cycle)
+  sampling_interval <- 4  # 4-hour sampling interval
+  frequencies <- seq(1 / (N * sampling_interval), 
+                   1 / (2 * sampling_interval), 
+                   length.out = length(per1a_power_normalized))
+
+
+  ## Process all the genes in the dataset and sort them according to the normalized FFT power in the circadian frequency of 1/24
+
+  circadian_frequency <- 1/24
+  circadian_powers <- numeric(nrow(data))
+
+  for (i in 1:nrow(data)) {
+   expression_levels <- as.numeric(data[i, 2:13])
+  
+  # Skip genes with all zero expression levels
+   if (all(expression_levels == 0,na.rm = TRUE)) {
+     circadian_powers[i] <- NA
+     next
+   }
+  
+  # Perform FFT and Compute the power spectrum:
+   circadian_fft <- fft(expression_levels)
+   circadian_power <- Mod(circadian_fft)^2
+   unique_circadian_powers <- circadian_power[2:7]
+   circadian_power_normalized <- unique_circadian_powers / sum(unique_circadian_powers)
+  
+    frequencies <- seq(1 / (N * sampling_interval), 
+                     1 / (2 * sampling_interval), 
+                     length.out = length(circadian_power_normalized))
+   circadian_index <- which.min(abs(frequencies - circadian_frequency))
+  
+    circadian_powers[i] <- circadian_power_normalized[circadian_index]       # For this part - circadian powers are the G factors.
+  }
+
+  # Sort the circadian powers and get the indices of the top 10
+  sorted_indices <- order(circadian_powers, decreasing = TRUE, na.last = TRUE)
+
+  # Sorting the G factor array.
+
+  circadian_powers <- circadian_powers[sorted_indices]
+
+  # Counting G factors for specific cut offs using the indices of the sorted array:
+  for (i in 1:101){
+    count=averaging_index
+    j=1;
+   if(!is.na(circadian_powers[j]) && (circadian_powers[j] > ((i - 1)/100) || circadian_powers[j] == ((i - 1)/100))){
+     while(!is.na(circadian_powers[j])&& (circadian_powers[j]>((i-1)/100) || circadian_powers[j]==((i-1)/100))){
+       #count=count+1
+       Shuffeled_version_of_a_vector_for_G_factor_cutt_offs_amount[i]<-j
+       j=j+1
+      }
+    }
+  }
+
+  averaged_vector_result=averaged_vector_result+Shuffeled_version_of_a_vector_for_G_factor_cutt_offs_amount/100
+  averaging_index=averaging_index+1
+}

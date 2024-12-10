@@ -1,8 +1,3 @@
-code in R for part 2: 
-
-(file path should be adjusted by the user)
-
-
 # Exercise 2 - neurogenomics:
 
 #################
@@ -220,3 +215,41 @@ for(averaging_index in 1:100){
   averaged_vector_result=averaged_vector_result+Shuffeled_version_of_a_vector_for_G_factor_cutt_offs_amount/100
   averaging_index=averaging_index+1
 }
+
+
+
+# Plot the vectors obtained from subpart 1 and from subpart 4:
+relevant_x_values=seq(0.00, 1, by = 0.01)
+plot(relevant_x_values,temp_for_back_up_keeping, type = "o", 
+     xlab = "G factor used as a cutoff", 
+     ylab = "The vector values", 
+     main = "Original and shuffled data comparison", 
+     xaxt = "n", 
+     col = "blue", pch = 16, lwd = 2, xlim = c(0, 1))
+
+lines(relevant_x_values,averaged_vector_result, col ='green', lwd=2)
+
+axis(1, at = seq(0.01, 1, by = 0.01), las = 2)
+legend(60, 11000, legend=c("Original", "Shuffled"),  
+       fill = c("blue","green") )
+
+
+# Calculating true positive fraction (by definition):
+
+True_positive_fractions <- numeric(100)
+for (index in 2:101){
+  True_positive_fractions[index-1]<-(temp_for_back_up_keeping[index]-averaged_vector_result[index])/temp_for_back_up_keeping[index]
+  index=index+1
+}
+  
+# Plot the True positive fractions by the G factor cutoffs:
+
+plot(relevant_x_values[2:101],True_positive_fractions, type = "o", 
+     xlab = "G factor used as a cutoff", 
+     ylab = "True positive fraction", 
+     main = "True positive fractions by the G factor cutoffs", 
+     xaxt = "n", 
+     col = "blue", pch = 16, lwd = 2, xlim = c(0, 1))
+
+axis(1, at = seq(0.01, 1, by = 0.01), las = 2)
+

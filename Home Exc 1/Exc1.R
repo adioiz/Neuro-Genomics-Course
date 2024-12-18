@@ -201,11 +201,11 @@ padj_vector <- ten_most_divide_genes$padj
 is_in_top_10 <- selected_genes_names %in% rownames(ten_most_divide_genes)
 
 # Display the result
-if (is_in_top_10) {
-  print(paste("The visually inspected gene (", selected_genes_names, ") is among the 10 genes."))
-} else {
-  print(paste("The visually inspected gene (", selected_genes_names, ") is NOT among the 10 genes."))
-}
+#if (is_in_top_10) {
+  #print(paste("The visually inspected gene (", selected_genes_names, ") is among the 10 genes."))
+#} else {
+  #print(paste("The visually inspected gene (", selected_genes_names, ") is NOT among the 10 genes."))
+#}
 
 
 ##################
@@ -289,6 +289,10 @@ top_40_circadian_genes <- data[sorted_indices[1:40], "GeneSymbol"]
 # Print the top 10 genes
 print("Top 10 genes with the highest normalized FFT power at 1/24:")
 print(top_10_circadian_genes)
+
+write.csv(circadian_powers, "/Users/adioiz/Documents/Learnings/Neuro-Genomics Course/Home Exc 2/g_factors.csv", row.names=FALSE)
+
+
 
 ## sanity check
 for (i in sorted_indices[1:10]){
